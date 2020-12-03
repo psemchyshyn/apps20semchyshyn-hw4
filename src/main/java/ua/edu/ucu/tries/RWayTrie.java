@@ -14,32 +14,30 @@ public class RWayTrie implements Trie {
     private static class Node{
         @Setter @Getter
         private int val;
-        private char sym;
         public Node[] next;
 
         public Node() {
             val = -1;
             next = new Node[R];
         }
+
     }
 
     @Override
     public void add(Tuple t) {
+        String term = t.term;
+        int weight = t.weight;
+        Node temp = root;
+        for (int i = 0; i < term.length(); i++) {
+            if (temp.next[term.charAt(i) - shift] == null)
+                temp.next[term.charAt(i) - shift] = new Node();
+            temp = temp.next[term.charAt(i) - shift];
 
-        root = add_helper(root, t.term, t.weight, 0);
-        size++;
-    }
-
-    private Node add_helper(Node to, String term, int weight, int index) {
-        if (to == null) to = new Node();
-        if (term.length() == index) {
-            to.setVal(weight);
-            return to;
         }
-        int next = term.charAt(index) - shift;
-        to.next[next] = add_helper(to.next[next], term, weight, index + 1);
-        return to;
+        size = temp.getVal() == -1 ? size: size + 1; // if the word exists, don't change size
+        temp.setVal(weight);
     }
+
 
     private Node get(Node start, String word) {
         Node temp = start;
@@ -54,33 +52,28 @@ public class RWayTrie implements Trie {
 
     @Override
     public boolean contains(String word) {
-        return get(root, word) != null;
+        Node temp = get(root, word);
+        return temp != null && temp.getVal() != -1;
     }
 
     @Override
     public boolean delete(String word) {
         if (contains(word)) {
-            root = delete(root, word, 0);
             size--;
+            Node temp = root;
+            Node prev = temp;
+            for (int i = 0; i < word.length(); i++) {
+                prev = temp;
+                temp = temp.next[word.charAt(i) - shift];
+            }
+            temp.setVal(-1);
+            for (int i = 0; i < R; i++) {
+                if (temp.next[i] != null) return true;
+            }
+            prev.next[word.charAt(word.length() - 1) - shift] = null;
             return true;
         }
         return false;
-    }
-
-    private Node delete(Node x, String key, int d)
-    {
-        if (x == null) return null;
-        if (d == key.length())
-            x.setVal(-1);
-        else
-        {
-            int c = key.charAt(d);
-            x.next[c - shift] = delete(x.next[c - shift], key, d+1);
-        }
-        if (x.getVal() != -1) return x;
-        for (int i = 0; i < R; i++)
-            if (x.next[i] != null) return x;
-        return null;
     }
 
     @Override
@@ -95,16 +88,13 @@ public class RWayTrie implements Trie {
         return q;
     }
 
-    private void collect(Node x, String pre,
-                         Queue q)
-    {
+    // from book
+    private void collect(Node x, String pre, Queue q) {
         if (x == null) return;
         if (x.getVal() != -1) q.enqueue(pre);
         for (int c = 0; c < R; c++)
             collect(x.next[c], pre + (char) (c + shift), q);
     }
-
-
 
     @Override
     public int size() {

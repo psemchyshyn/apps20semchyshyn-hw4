@@ -6,10 +6,6 @@ import ua.edu.ucu.tries.Tuple;
 import java.util.*;
 
 
-/**
- *
- * @author andrii
- */
 public class PrefixMatches {
 
     private Trie trie;
@@ -20,7 +16,7 @@ public class PrefixMatches {
 
     public int load(String... strings) {
         if (strings.length == 1) {
-            strings = strings[0].split("%s+");
+            strings = strings[0].split("\\s+");
         }
         for (String s: strings) {
             trie.add(new Tuple(s, s.length()));
